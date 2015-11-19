@@ -10,7 +10,7 @@ filename3 = "ball_position.txt"
 file = File.open("posi.txt","w+")
 
 count = 1   #大元の繰り返しをカウントする
-
+count2 = 1  #選手の位置を配列に格納するときに使う
 
 def make_nm_array(n,m)  #要素が空(nil)の、n×ｍの２次元配列を作る
   (0...n).map { Array.new(m) }
@@ -29,13 +29,39 @@ json_data.each do |datan|  #大元の繰り返し
   right= show['right']
 
   if time.to_i == count then
-    position[count][0]=time.to_i
+    position[count][0]=time.to_i #配列の[1-6000][0]番目の要素に時間を代入
+     left.each do |l|
+      position[count][count2]=l[1].to_f
+      position[count][count2+1]=l[2].to_f
+      count2 = count2 + 2
+     end
+
+     right.each do |r|
+      position[count][count2]=r[1].to_f
+      position[count][count2+1]=r[2].to_f
+      count2 = count2 + 2
+     end
+
+    count2 = 1 #count2をリセット
     count +=1
    elsif count == 3000 then
     count = 3001
     position[count][0]=time.to_i
-    count += 1
 
+    left.each do |l|
+      position[count][count2]=l[1].to_f
+      position[count][count2+1]=l[2].to_f
+      count2 = count2 + 2
+    end
+
+    right.each do |r|
+      position[count][count2]=r[1].to_f
+      position[count][count2+1]=r[2].to_f
+      count2 = count2 + 2
+     end
+
+    count2 = 1 #count2をリセット
+    count += 1
   end
 end
 
