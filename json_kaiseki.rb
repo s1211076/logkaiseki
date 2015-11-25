@@ -3,11 +3,13 @@ require 'json'
 
 #変数json_dataに引数で指定したfileを
 json_data = JSON.load(File.read(ARGV[0])) 
-filename1 = "left_position.txt"
-filename2 = "right_position.txt"
-filename3 = "ball_position.txt"
+filename1 = "left_goal_position.txt"
+filename2 = "right_goal_position.txt"
+#filename3 = "ball_position.txt"
 
 file = File.open("posi.txt","w+")
+file_l = File.open(filename1,"w+")
+file_r = File.open(filename2,"w+")
 
 count = 1   #大元の繰り返しをカウントする
 count2 = 1  #選手の位置を配列に格納するときに使う
@@ -20,14 +22,28 @@ position = make_nm_array(6001,47)
 #6000ステップ分の配列を作成するが0番目は無視
 #時間、ボールの位置(x，y)、leftチームの選手の位置(x，y)、rightチームの選手の位置（x，y）の順に配列に格納
 
-json_data.each do |datan|  #大元の繰り返し
-  data = datan 
+json_data.each do |datan|  #大元の繰り返し,JSONデータの配列すべてに関して
+  data = datan
+  goal_l=[]  #左チームが得点した時の時刻を代入
+  goal_r=[]  #右チームが得点した時の時刻を代入
+  play_mode = data['playmode']
   show = data['show']
   time = show['time']
   ball = show['ball']
   left = show['left']
   right= show['right']
 
+  if play_mode != nil then
+  playmode = play_mode['playmode']
+    if playmode == "goal_l" then
+      p goal_l.push(time.to_i)
+    end
+    if playmode == "goal_r" then
+      p goal_l.push(time.to_i)
+    end
+  end
+
+  
   if time.to_i == count then
     position[count][0]=time.to_i #配列の[1-6000][0]番目の要素に時間を代入
      left.each do |l|
@@ -63,11 +79,16 @@ json_data.each do |datan|  #大元の繰り返し
     count2 = 1 #count2をリセット
     count += 1
   end
+
+
 end
+
 
 position.each do |po|
  file.puts "#{po}\n" #"posi.txtに配列の中身を出力"
 end
+
+
 =begin
 #ファイルに出力する部分は今回は使わない
 
