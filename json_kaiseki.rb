@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 require 'json'
 
-#変数json_dataに引数で指定したfileを
-json_data = JSON.load(File.read(ARGV[0])) 
-filename1 = "left_goal_position.txt"
-filename2 = "right_goal_position.txt"
+filename1 = "left_goal_position.txt" #leftチームがゴールするまでの50ステップ間の試合状態を保存するファイル
+filename2 = "right_goal_position.txt" #right
 #filename3 = "ball_position.txt"
 
-file = File.open("posi.txt","w+")
+#file = File.open("posi.txt","w+")  
 file_l = File.open(filename1,"w+")
 file_r = File.open(filename2,"w+")
 
@@ -25,98 +23,107 @@ goal_r=[]  #右チームが得点した時の時刻を代入
 #6000ステップ分の配列を作成するが0番目は無視
 #時間、ボールの位置(x,y),leftチームの選手の位置(x,y),rightチームの選手の位置(x,y)の順に配列に格納
 
+
+
+#json.txtというファイルにjsonのデータのファイル名を格納し、1行ずつ読み込んで実行させる
+
+txtfile = File.open("json.txt")
+txtfile.each_line do  |line|#txtファイル中にあるファイル名を1行ずつ読み込む
+json_data = JSON.load(File.read(line.chomp)) #.chompは末尾の改行文字を削除した文字列を返してくれる
+puts line.chomp + "start.\n" 
 #------------------------------------------------------------------------------------------------------------
+  json_data.each do |datan|  #大元の繰り返し,JSONデータの配列すべてに関して
+    data = datan
+    play_mode = data['playmode']
+    show = data['show']
+    time = show['time']
+    ball = show['ball']
+    left = show['left']
+    right= show['right']
 
-json_data.each do |datan|  #大元の繰り返し,JSONデータの配列すべてに関して
-  data = datan
-  play_mode = data['playmode']
-  show = data['show']
-  time = show['time']
-  ball = show['ball']
-  left = show['left']
-  right= show['right']
-
-  if play_mode != nil then #playmodeキーの値がnilでなければ
-  playmode = play_mode['playmode'] #playmodeキーの値のキーになっているplaymodeキーの値を取得
-    if playmode == "goal_l" then   #その値がgoal_lなら
-      puts "left"
-      p goal_l.push(time.to_i)
+    if play_mode != nil then #playmodeキーの値がnilでなければ
+      playmode = play_mode['playmode'] #playmodeキーの値のキーになっているplaymodeキーの値を取得
+      if playmode == "goal_l" then   #その値がgoal_lなら
+        puts "left"
+        p goal_l.push(time.to_i)
+      end
+      if playmode == "goal_r" then   #その値がgoal_rなら
+        puts "right"
+        p goal_r.push(time.to_i)
+      end
     end
-    if playmode == "goal_r" then   #その値がgoal_rなら
-      puts "right"
-      p goal_r.push(time.to_i)
+    
+    if time.to_i == count then
+      position[count][0]=time.to_i #配列の[1〜6000][0]番目の要素に時間を代入
+      
+      #ボールの位置を格納
+      position[count][count2]=ball[0].to_f
+      position[count][count2+1]=ball[1].to_f
+      count2 = count2 + 2
+      #leftチームの位置を格納
+      left.each do |l|
+        position[count][count2]=l[1].to_f
+        position[count][count2+1]=l[2].to_f
+        count2 = count2 + 2
+      end
+      #rightチームの位置を格納
+      right.each do |r|
+        position[count][count2]=r[1].to_f
+        position[count][count2+1]=r[2].to_f
+        count2 = count2 + 2
+      end
+      count2 = 1 #count2をリセット
+      count +=1
+      #3000ステップ目はカウントされないみたいなので、countが3000になった時の場合を考える
+    elsif count == 3000 then
+      count = 3001
+      position[count][0]=time.to_i
+      #ball
+      position[count][count2]=ball[0].to_f
+      position[count][count2]=ball[1].to_f
+      count2 = count2 + 2
+      #left_team
+      left.each do |l|
+        position[count][count2]=l[1].to_f
+        position[count][count2+1]=l[2].to_f
+        count2 = count2 + 2
+      end
+      #right_team
+      right.each do |r|
+        position[count][count2]=r[1].to_f
+        position[count][count2+1]=r[2].to_f
+        count2 = count2 + 2
+      end
+      count2 = 1 #count2をリセット
+      count += 1
     end
+    
   end
-
-  if time.to_i == count then
-    position[count][0]=time.to_i #配列の[1〜6000][0]番目の要素に時間を代入
-
-    #ボールの位置を格納
-    position[count][count2]=ball[0].to_f
-    position[count][count2+1]=ball[1].to_f
-    count2 = count2 + 2
-    #leftチームの位置を格納
-     left.each do |l|
-      position[count][count2]=l[1].to_f
-      position[count][count2+1]=l[2].to_f
-      count2 = count2 + 2
-     end
-    #rightチームの位置を格納
-     right.each do |r|
-      position[count][count2]=r[1].to_f
-      position[count][count2+1]=r[2].to_f
-      count2 = count2 + 2
-     end
-    count2 = 1 #count2をリセット
-    count +=1
-    #3000ステップ目はカウントされないみたいなので、countが3000になった時の場合を考える
-   elsif count == 3000 then
-    count = 3001
-    position[count][0]=time.to_i
-    #ball
-    position[count][count2]=ball[0].to_f
-    position[count][count2]=ball[1].to_f
-    count2 = count2 + 2
-    #left_team
-    left.each do |l|
-      position[count][count2]=l[1].to_f
-      position[count][count2+1]=l[2].to_f
-      count2 = count2 + 2
-    end
-    #right_team
-    right.each do |r|
-      position[count][count2]=r[1].to_f
-      position[count][count2+1]=r[2].to_f
-      count2 = count2 + 2
-     end
-    count2 = 1 #count2をリセット
-    count += 1
-  end
-
-end
 
 #-------------------------------------------------------------------------------------------------------------
 #ゴールするまでの50ステップ間の試合状態をファイルに出力
 
-position.each do |po|
- if po[0] != nil then #要素が空でない時
-  file.puts "#{po}\n" #"posi.txtに配列の中身を出力"
-
-  goal_l.each do |l| #leftチームがゴールする時刻までの50ステップ間の情報を記録
-   if po[0] > l-51 && po[0] < l+1 then
-    file_l.puts "#{po}\n"
-   end
+  position.each do |po|
+    if po[0] != nil then #要素が空でない時
+      # file.puts "#{po}\n" #"posi.txtに配列の中身を出力"
+      goal_l.each do |l| #leftチームがゴールする時刻までの50ステップ間の情報を記録
+        if po[0] > l-51 && po[0] < l+1 then
+          file_l.puts "#{po}\n"
+        end
+      end
+      goal_r.each do |r| #rightチームが…
+        if po[0] > r-51 && po[0] < r+1 then
+          file_r.puts "#{po}\n"
+        end
+      end
+    end
   end
-
-  goal_r.each do |r| #rightチームが…
-   if po[0] > r-51 && po[0] < r+1 then
-    file_r.puts "#{po}\n"
-   end
-  end
- end
-end
-
 #-------------------------------------------------------------------------------------------------------------
+goal_l.clear #配列を空にする（破壊的メソッド）
+goal_r.clear 
+puts line.chomp + "finish.\n" 
+end
+file.close
 
 =begin
 #ファイルに出力する部分は今回は使わない
